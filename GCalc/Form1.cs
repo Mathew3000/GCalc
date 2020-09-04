@@ -100,11 +100,11 @@ namespace GCalc
             {
                 int line_nr = 0;
                 int found_lines = 0;
-                bool first_match = true;
                 // The regex strings
-                string pat_length = @"; filament used = \s*([^m\n\r]*)";
+                string pat_length = @"; filament used \[mm\] = \s*([^m\n\r]*)";
+                string pat_weight = @"; filament used \[g\] = \s*([^m\n\r]*)";
                 string pat_cost = @"; filament cost = \s*([^m\n\r]*)";
-                string pat_time = @"; estimated printing time =\s*([^hms]*)h*m*\s*([^ms]*)m*s*\s*([^s\n\r]*)";
+                string pat_time = @"; estimated printing time \(normal mode\) = \s*([^hms]*)h*m*\s*([^ms]*)m*s*\s*([^s\n\r]*)";
 
                 // This is a BIG BUFFER if you have a BIG FILE
                 string[] lines = File.ReadAllLines(file);
@@ -118,11 +118,14 @@ namespace GCalc
 
                     // Create regex
                     Regex rgx_len = new Regex(pat_length, RegexOptions.IgnoreCase);
+                    Regex rgx_wght = new Regex(pat_weight, RegexOptions.IgnoreCase);
                     Regex rgx_cost = new Regex(pat_cost, RegexOptions.IgnoreCase);
                     Regex rgx_time = new Regex(pat_time, RegexOptions.IgnoreCase);
 
                     // Match length
                     MatchCollection matches_len = rgx_len.Matches(line);
+                    // Match wight
+                    MatchCollection matches_wght = rgx_wght.Matches(line);
                     // Match cost
                     MatchCollection matches_cost = rgx_cost.Matches(line);
                     // Match time
@@ -131,15 +134,12 @@ namespace GCalc
                     // Check Matches for length
                     if (matches_len.Count > 0)
                     {
-                        if (first_match)
-                        {
-                            fi_weight += double.Parse(matches_len[0].Groups[1].Value, System.Globalization.NumberStyles.AllowDecimalPoint, System.Globalization.NumberFormatInfo.InvariantInfo);
-                        }
-                        else
-                        {
-                            fi_length += double.Parse(matches_len[0].Groups[1].Value, System.Globalization.NumberStyles.AllowDecimalPoint, System.Globalization.NumberFormatInfo.InvariantInfo);
-                        }
-                        first_match = false;
+                        fi_length += double.Parse(matches_len[0].Groups[1].Value, System.Globalization.NumberStyles.AllowDecimalPoint, System.Globalization.NumberFormatInfo.InvariantInfo);
+                        found_lines++;
+                    }
+                    else if(matches_wght.Count > 0)
+                    {
+                        fi_weight += double.Parse(matches_wght[0].Groups[1].Value, System.Globalization.NumberStyles.AllowDecimalPoint, System.Globalization.NumberFormatInfo.InvariantInfo);
                         found_lines++;
                     }
                     // Check Matches for cost
